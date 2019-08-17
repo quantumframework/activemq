@@ -1,0 +1,18 @@
+#!/bin/sh
+CERTS_DIR=/usr/local/share/ca-certificates
+export TRUSTSTORE_PATH=$KEYCLOAK_HOME/standalone/configuration/cacerts
+export TRUSTSTORE_PASSWORD=changeit
+if ls ${CERTS_DIR}/*.pem 1> /dev/null 2>&1; then
+  for fn in ${CERTS_DIR}/*.pem; do
+    crt="${fn##*/}"
+    keytool -keystore $TRUSTSTORE_PATH\
+      -import -alias $crt\
+      -file "$CERTS_DIR/$crt"\
+      -storepass $TRUSTSTORE_PASSWORD\
+      -keypass $TRUSTSTORE_PASSWORD\
+      -noprompt
+  done
+else
+  export TRUSTSTORE_PATH="${JAVA_HOME}/jre/lib/security/cacerts"
+fi
+$@
