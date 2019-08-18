@@ -20,7 +20,6 @@ FROM ibmjava:8-jre-alpine
   ENV RUNTIME_HOME $RUNTIME_HOME
   ENV RUNTIME_SHELL $RUNTIME_SHELL
   ENV activemq.data $ACTIVEMQ_DATA
-  ENV activemq.store.dir /opt/activemq/spool
 
   USER root
   COPY bin/docker-entrypoint /usr/local/bin/docker-entrypoint
