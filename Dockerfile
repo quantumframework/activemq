@@ -12,12 +12,15 @@ FROM ibmjava:8-jre-alpine
   ARG RUNTIME_HOME=/home/activemq
   ARG RUNTIME_SHELL=/bin/bash
   ENV ACTIVEMQ_HOME /opt/activemq
+  ENV ACTIVEMQ_DATA /opt/activemq/data
   ENV RUNTIME_UID $RUNTIME_UID
   ENV RUNTIME_GID $RUNTIME_GID
   ENV RUNTIME_USR $RUNTIME_USR
   ENV RUNTIME_GRP $RUNTIME_GRP
   ENV RUNTIME_HOME $RUNTIME_HOME
   ENV RUNTIME_SHELL $RUNTIME_SHELL
+  ENV activemq.data $ACTIVEMQ_DATA
+  ENV activemq.store.dir /opt/activemq/spool
 
   USER root
   COPY bin/docker-entrypoint /usr/local/bin/docker-entrypoint
@@ -28,7 +31,11 @@ FROM ibmjava:8-jre-alpine
     -H -D -s /bin/ash $RUNTIME_USR
   RUN apk update && apk add wget
   RUN mkdir -p $ACTIVEMQ_HOME
+  RUN mkdir -p $activemq.data
+  RUN mkdir -p $activemq.store.dir
   RUN chown $RUNTIME_USR:$RUNTIME_GRP $ACTIVEMQ_HOME
+  RUN chown $RUNTIME_USR:$RUNTIME_GRP $activemq.data
+  RUN chown $RUNTIME_USR:$RUNTIME_GRP $activemq.store.dir
   RUN chmod +x /usr/local/bin/docker-entrypoint
 
   USER activemq
@@ -36,11 +43,12 @@ FROM ibmjava:8-jre-alpine
   RUN wget http://apache.hippo.nl//activemq/5.15.9/apache-activemq-5.15.9-bin.tar.gz 2>/dev/null
   RUN tar zxvf apache-activemq*.tar.gz -C .
   RUN cp -R apache-activemq*/* $ACTIVEMQ_HOME
-  RUN rm -rf /tmp/*
-  COPY --from=builder /tmp/activemq-k8s-discovery/target/activemq-k8s-discovery-1.0.2-jar-with-dependencies.jar\
-    $ACTIVEMQ_HOME/lib/
 
   WORKDIR $ACTIVEMQ_HOME
+  COPY --from=builder /tmp/activemq-k8s-discovery/target/activemq-k8s-discovery-1.0.2-jar-with-dependencies.jar\
+    $ACTIVEMQ_HOME/lib/
+  RUN mkdir -p $ACTIVEMQ_DATA/kahadb
+  RUN rm -rf /tmp/*
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint"]
 CMD ["/opt/activemq/bin/activemq", "console"]
